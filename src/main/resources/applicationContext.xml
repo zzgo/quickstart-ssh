@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/data/jpa
+        http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+
+    <!-- 加载config 文件 -->
+    <context:property-placeholder location="classpath:config.properties"/>
+
+    <context:component-scan base-package="com.zachary.ssm"></context:component-scan>
+
+    <!-- 连接池配置 数据库管理工厂 LocalContainerEntityManagerFactoryBean  -->
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="packagesToScan" value="com.zachary.ssm"/>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"></bean>
+        </property>
+        <!-- 使用 proxool 需要导入相应的包-->
+        <property name="dataSource">
+            <bean class="org.logicalcobwebs.proxool.ProxoolDataSource">
+                <property name="driver" value="${db.driver}"/>
+                <property name="driverUrl" value="${db.url}"/>
+                <property name="user" value="${db.username}"/>
+                <property name="password" value="${db.password}"/>
+                <property name="minimumConnectionCount" value="${proxool.mininumConnectionCount}"/>
+                <property name="maximumConnectionCount" value="${proxool.maxinumConnectionCount}"/>
+                <property name="houseKeepingSleepTime" value="${proxool.houseKeepingSleepTime}"/>
+                <property name="prototypeCount" value="${proxool.prototypeCount}"/>
+                <property name="maximumActiveTime" value="${proxool.maxinumActiveTime}"/>
+                <property name="simultaneousBuildThrottle" value="${proxool.prototypeCount}"/>
+            </bean>
+        </property>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+                <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+                <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+                <prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+                <prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!-- 事务管理，交给spring容器管理的 -->
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+    <!-- 注解自动扫描到，并且注入，交由spring管理-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- jpa -->
+    <jpa:repositories base-package="com.zachary.ssm" entity-manager-factory-ref="entityManagerFactory"
+                      transaction-manager-ref="transactionManager"/>
+
+</beans>
